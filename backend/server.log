@@ -1,0 +1,9 @@
+INFO:     Started server process [2348]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8420 (Press CTRL+C to quit)
+INFO:     127.0.0.1:64520 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64522 - "POST /api/mission HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64523 - "GET /api/mission/23948ef6/scenarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64524 - "POST /api/mission/23948ef6/simulate/no_gpu HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64525 - "POST /api/mission/23948ef6/blocker HTTP/1.1" 200 OK
