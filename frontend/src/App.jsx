@@ -3,6 +3,7 @@ import { api } from "./api.js";
 import IntakeForm from "./components/IntakeForm.jsx";
 import DebatePanel from "./components/DebatePanel.jsx";
 import ResearchPanel from "./components/ResearchPanel.jsx";
+import RagPanel from "./components/RagPanel.jsx";
 import PlanPanel from "./components/PlanPanel.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import BlockerPanel from "./components/BlockerPanel.jsx";
@@ -132,7 +133,12 @@ export default function App() {
 
           {tab === "plan" && <PlanPanel mission={mission} onStatusChange={handleStatusChange} />}
           {tab === "debate" && <DebatePanel debate={mission.debate} />}
-          {tab === "research" && <ResearchPanel research={mission.research} />}
+          {tab === "research" && (
+            <>
+              <RagPanel missionId={mission.mission_id} />
+              <ResearchPanel research={mission.research} />
+            </>
+          )}
           {tab === "simulate" && <ScenarioPanel missionId={mission.mission_id} />}
           {tab === "adapt" && (
             <BlockerPanel onReport={handleBlocker} submitting={blockerSubmitting} lastOutcome={lastOutcome} />

@@ -35,4 +35,17 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     }).then(handle),
+
+  uploadDocument: (id, file) => {
+    const form = new FormData();
+    form.append("file", file);
+    return fetch(`${BASE}/${id}/documents`, { method: "POST", body: form }).then(handle);
+  },
+
+  researchQuery: (id, query) =>
+    fetch(`${BASE}/${id}/research-query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }).then(handle),
 };

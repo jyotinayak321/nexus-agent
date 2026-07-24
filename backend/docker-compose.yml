@@ -1,0 +1,15 @@
+services:
+  db:
+    image: ankane/pgvector:latest
+    restart: always
+    environment:
+      POSTGRES_USER: "nexus"
+      POSTGRES_PASSWORD: "nexus_pass"
+      POSTGRES_DB: "nexus_db"
+    ports:
+      - "55432:5432"
+    volumes:
+      - nexus_pgdata:/var/lib/postgresql/data
+
+volumes:
+  nexus_pgdata:

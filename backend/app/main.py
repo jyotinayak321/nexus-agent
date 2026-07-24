@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .database import init_db
 from .llm_provider import get_provider
-from .routers import mission
+from .routers import mission, research
 
 app = FastAPI(title="NEXUS — Autonomous Research, Decision & Execution Agent")
 
@@ -15,6 +16,12 @@ app.add_middleware(
 )
 
 app.include_router(mission.router)
+app.include_router(research.router)
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    init_db()
 
 
 @app.get("/api/health")

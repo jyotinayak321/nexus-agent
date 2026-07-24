@@ -5,3 +5,6 @@ backend/app/**/__pycache__/
 frontend/node_modules/
 frontend/dist/
 .env
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.9
+pgvector==0.3.4
