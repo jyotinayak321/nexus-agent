@@ -388,49 +388,7 @@ Verification
  ↓
 Replanning
 ```
-## Project Strcture
----
-C:\Users\rajes\nexus-agent\
-├── backend\
-│   ├── app\
-│   │   ├── main.py                  ← FastAPI app entry point
-│   │   ├── database.py              ← Postgres connection (port 55432)
-│   │   ├── db_models.py             ← 9 DB tables (SQLAlchemy)
-│   │   ├── mission_repository.py    ← DB read/write logic
-│   │   ├── llm_provider.py          ← Groq + Mock provider (pluggable)
-│   │   ├── knowledge_base.py        ← Constraints model
-│   │   ├── models.py                ← Pydantic schemas
-│   │   ├── orchestrator.py          ← Pipeline: Research→Debate→Plan
-│   │   ├── agents\
-│   │   │   ├── debate.py            ← Multi-agent debate (5 decisions)
-│   │   │   ├── research.py          ← Evidence-based recommendations
-│   │   │   ├── decomposition.py     ← Goal → phases → tasks
-│   │   │   ├── simulate.py          ← What-if scenarios
-│   │   │   └── replan.py            ← Self-correcting blocker handling
-│   │   ├── services\
-│   │   │   └── rag.py               ← PDF→chunks→embeddings→pgvector
-│   │   └── routers\
-│   │       ├── mission.py           ← Mission API endpoints
-│   │       └── research.py          ← RAG upload/query endpoints
-│   ├── .env                         ← GROQ_API_KEY (git-ignored, safe)
-│   ├── docker-compose.yml           ← Postgres+pgvector container
-│   └── requirements.txt
-│
-├── frontend\src\
-│   ├── App.jsx                      ← Main app, tabs
-│   ├── api.js                       ← Backend API calls
-│   └── components\
-│       ├── IntakeForm.jsx           ← Goal/constraints form
-│       ├── PlanPanel.jsx            ← Task breakdown + progress
-│       ├── DebatePanel.jsx          ← Agent opinions + final decision
-│       ├── ResearchPanel.jsx        ← Evidence cards
-│       ├── RagPanel.jsx             ← PDF upload + question box
-│       ├── ScenarioPanel.jsx        ← What-if simulator
-│       ├── BlockerPanel.jsx         ← Adaptive replanning
-│       └── LogPanel.jsx             ← Mission log
-│
-├── NEXUS_Project_Explainer.pdf
-└── NEXUS_Pitch_Deck.pptx
+    ← Adaptive replannin
 ## 🏗️ System Architecture
 
 ```text
@@ -719,52 +677,47 @@ Resume Upload
 ## 📁 Project Structure
 
 ```text
-nexus/
+C:\Users\rajes\nexus-agent\
+├── backend\
+│   ├── app\
+│   │   ├── main.py                  ← FastAPI app entry point
+│   │   ├── database.py              ← Postgres connection (port 55432)
+│   │   ├── db_models.py             ← 9 DB tables (SQLAlchemy)
+│   │   ├── mission_repository.py    ← DB read/write logic
+│   │   ├── llm_provider.py          ← Groq + Mock provider (pluggable)
+│   │   ├── knowledge_base.py        ← Constraints model
+│   │   ├── models.py                ← Pydantic schemas
+│   │   ├── orchestrator.py          ← Pipeline: Research→Debate→Plan
+│   │   ├── agents\
+│   │   │   ├── debate.py            ← Multi-agent debate (5 decisions)
+│   │   │   ├── research.py          ← Evidence-based recommendations
+│   │   │   ├── decomposition.py     ← Goal → phases → tasks
+│   │   │   ├── simulate.py          ← What-if scenarios
+│   │   │   └── replan.py            ← Self-correcting blocker handling
+│   │   ├── services\
+│   │   │   └── rag.py               ← PDF→chunks→embeddings→pgvector
+│   │   └── routers\
+│   │       ├── mission.py           ← Mission API endpoints
+│   │       └── research.py          ← RAG upload/query endpoints
+│   ├── .env                         ← GROQ_API_KEY (git-ignored, safe)
+│   ├── docker-compose.yml           ← Postgres+pgvector container
+│   └── requirements.txt
 │
-├── backend/
-│   ├── agents/
-│   │   ├── supervisor.py
-│   │   ├── research_agent.py
-│   │   ├── planning_agent.py
-│   │   ├── risk_agent.py
-│   │   ├── decision_agent.py
-│   │   └── review_agent.py
-│   │
-│   ├── tools/
-│   │   ├── web_search.py
-│   │   ├── rag_search.py
-│   │   ├── planner.py
-│   │   ├── scheduler.py
-│   │   └── verification.py
-│   │
-│   ├── graph/
-│   │   └── agent_graph.py
-│   │
-│   ├── database/
-│   │   ├── models.py
-│   │   └── database.py
-│   │
-│   ├── api/
-│   │   └── routes.py
-│   │
-│   └── main.py
+├── frontend\src\
+│   ├── App.jsx                      ← Main app, tabs
+│   ├── api.js                       ← Backend API calls
+│   └── components\
+│       ├── IntakeForm.jsx           ← Goal/constraints form
+│       ├── PlanPanel.jsx            ← Task breakdown + progress
+│       ├── DebatePanel.jsx          ← Agent opinions + final decision
+│       ├── ResearchPanel.jsx        ← Evidence cards
+│       ├── RagPanel.jsx             ← PDF upload + question box
+│       ├── ScenarioPanel.jsx        ← What-if simulator
+│       ├── BlockerPanel.jsx         ← Adaptive replanning
+│       └── LogPanel.jsx             ← Mission log
 │
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── services/
-│   │
-│   └── package.json
-│
-├── docs/
-│   ├── architecture.png
-│   └── workflow.md
-│
-├── .env.example
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
+├── NEXUS_Project_Explainer.pdf
+└── NEXUS_Pitch_Deck.pptx
 ```
 
 ---
