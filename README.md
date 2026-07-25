@@ -3,6 +3,7 @@
 > **From Goal to Execution — An AI Agent That Thinks, Plans, Acts, and Adapts.**
 
 NEXUS is an autonomous Agentic AI system designed to transform complex user goals into actionable and evidence-based execution plans. Unlike traditional chatbots that primarily generate responses, NEXUS can understand user objectives, identify constraints, conduct research, evaluate alternatives, create structured task plans, select suitable tools, monitor progress, detect failures, and dynamically adapt its approach.
+
 The system is built to solve real-world problems that require multi-step reasoning, research, planning, decision-making, and continuous adaptation.
 
 ---
