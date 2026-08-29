@@ -840,27 +840,3 @@ Adaptive Replanning
 
 > **Most AI systems generate a plan. NEXUS continuously evaluates reality, takes actions, detects failures, and adapts its plan to achieve the user's goal.**
 
----
-
-## 👥 Team
-
-**Team Name:** [Add Team Name]
-
-| Member     | Role                    |
-| ---------- | ----------------------- |
-| [Member 1] | AI / Agent Architecture |
-| [Member 2] | Backend / APIs          |
-| [Member 3] | Frontend / UI           |
-| [Member 4] | Research / Testing      |
-
----
-
-## 📄 License
-
-This project is developed for educational and hackathon purposes.
-
----
-
-## 🚀 Built for Ascendant Agents
-
-Developed for the **Ascendant Agents Generative AI Hackathon** organized by D'Code NSUT.
