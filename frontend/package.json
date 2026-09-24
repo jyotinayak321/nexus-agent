@@ -1,18 +1,10 @@
 {
-<<<<<<< HEAD
   "name": "nexus-agent-frontend",
-=======
-  "name": "nexus-frontend",
->>>>>>> 7cbc55677b79be1bd66e40b264776391f23037bb
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-<<<<<<< HEAD
     "dev": "vite --port 5174",
-=======
-    "dev": "vite",
->>>>>>> 7cbc55677b79be1bd66e40b264776391f23037bb
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -22,13 +14,9 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
-<<<<<<< HEAD
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
     "vite": "^5.3.1"
-=======
-    "vite": "^5.4.8"
->>>>>>> 7cbc55677b79be1bd66e40b264776391f23037bb
   }
 }
