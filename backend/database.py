@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Must match root docker-compose.yml (user/password/db) and host port 55432.
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://postgres:postgres@localhost:55432/nexus_db",
@@ -30,6 +31,16 @@ def init_db() -> None:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
 
     Base.metadata.create_all(bind=engine)
+
+
+def database_ready() -> bool:
+    """Return True when Postgres accepts a simple query."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
 
 
 def get_db():

@@ -1,6 +1,11 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+RUN apk add --no-cache ca-certificates
+COPY avg-ca.crt* /usr/local/share/ca-certificates/
+RUN update-ca-certificates || true
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
 COPY package*.json ./
 RUN npm install
 

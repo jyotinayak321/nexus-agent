@@ -18,7 +18,6 @@ from functools import lru_cache
 from typing import Any
 
 import fitz  # PyMuPDF
-from sentence_transformers import SentenceTransformer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -32,11 +31,48 @@ DEFAULT_TOP_K = int(os.getenv("RAG_TOP_K", "5"))
 MAX_TOP_K = 12
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md"}
 
+if os.path.exists("/etc/ssl/certs/ca-certificates.crt"):
+    os.environ.setdefault("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt")
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", "/etc/ssl/certs/ca-certificates.crt")
+    os.environ.setdefault("CURL_CA_BUNDLE", "/etc/ssl/certs/ca-certificates.crt")
 
-@lru_cache(maxsize=1)
-def get_embedding_model() -> SentenceTransformer:
-    """Load the embedding model once per backend process."""
-    return SentenceTransformer(EMBEDDING_MODEL)
+
+class RagUnavailableError(RuntimeError):
+    """Raised when RAG/embedding model cannot be loaded (e.g. PyTorch blocked by policy)."""
+    pass
+
+
+_embedding_model: Any = None
+_embedding_model_error: str | None = None
+
+
+def get_embedding_model() -> Any:
+    """Lazily load the embedding model once per backend process.
+    If PyTorch or SentenceTransformer fails to load (e.g., WinError 4551),
+    records the failure and raises RagUnavailableError.
+    """
+    global _embedding_model, _embedding_model_error
+    if _embedding_model is not None:
+        return _embedding_model
+    if _embedding_model_error is not None:
+        raise RagUnavailableError(_embedding_model_error)
+
+    try:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model = SentenceTransformer(EMBEDDING_MODEL)
+        return _embedding_model
+    except Exception as exc:
+        _embedding_model_error = f"RAG embedding model unavailable ({type(exc).__name__}: {exc})"
+        raise RagUnavailableError(_embedding_model_error) from exc
+
+
+def is_rag_available() -> tuple[bool, str | None]:
+    """Helper to check if RAG / embedding model is available."""
+    try:
+        get_embedding_model()
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
 
 
 def _extension(filename: str) -> str:
@@ -46,13 +82,20 @@ def _extension(filename: str) -> str:
 def extract_text(file_bytes: bytes, filename: str) -> str:
     ext = _extension(filename)
     if ext not in SUPPORTED_EXTENSIONS:
-        raise ValueError("Only PDF, TXT and MD files are supported")
+        supported_list = ", ".join(sorted(SUPPORTED_EXTENSIONS))
+        raise ValueError(
+            f"Unsupported file type '{ext}' for '{filename}'. "
+            f"Only the following formats are supported: {supported_list}"
+        )
+
+    if not file_bytes or len(file_bytes.strip()) == 0:
+        raise ValueError(f"Uploaded file '{filename}' is empty (0 bytes).")
 
     if ext == ".pdf":
         try:
             pdf = fitz.open(stream=io.BytesIO(file_bytes), filetype="pdf")
         except Exception as exc:
-            raise ValueError("Could not open this PDF") from exc
+            raise ValueError(f"Could not read PDF '{filename}'. File may be corrupt or encrypted.") from exc
 
         pages = [page.get_text("text") for page in pdf]
         pdf.close()
@@ -68,7 +111,7 @@ def extract_text(file_bytes: bytes, filename: str) -> str:
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
     if not text:
-        raise ValueError("No readable text found in the document")
+        raise ValueError(f"No readable text found in '{filename}'. Ensure the file contains extractable text.")
     return text
 
 
@@ -176,6 +219,7 @@ def search_similar(db: Session, query: str, top_k: int = DEFAULT_TOP_K) -> list[
     results: list[dict[str, Any]] = []
     for chunk, filename, cosine_distance in rows:
         distance_value = float(cosine_distance)
+        citation = f"[{filename}#chunk-{chunk.chunk_index}]"
         results.append(
             {
                 "chunk_id": str(chunk.id),
@@ -183,6 +227,7 @@ def search_similar(db: Session, query: str, top_k: int = DEFAULT_TOP_K) -> list[
                 "filename": filename,
                 "chunk_index": chunk.chunk_index,
                 "content": chunk.content,
+                "citation": citation,
                 "score": round(max(0.0, 1.0 - distance_value), 4),
             }
         )
@@ -203,13 +248,15 @@ def retrieve_context(query: str, top_k: int = DEFAULT_TOP_K) -> tuple[str, list[
     context_parts = []
     sources = []
     for result in results:
-        label = f"{result['filename']}#chunk-{result['chunk_index']}"
-        context_parts.append(f"SOURCE [{label}]\n{result['content']}")
+        label = result.get("citation") or f"[{result['filename']}#chunk-{result['chunk_index']}]"
+        context_parts.append(f"SOURCE {label}\n{result['content']}")
         sources.append(
             {
                 "filename": result["filename"],
                 "chunk_index": result["chunk_index"],
                 "score": result["score"],
+                "citation": label,
+                "snippet": result["content"][:200] + ("..." if len(result["content"]) > 200 else ""),
             }
         )
     return "\n\n---\n\n".join(context_parts), sources

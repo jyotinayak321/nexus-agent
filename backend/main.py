@@ -16,6 +16,7 @@ RAG routes:
 
 import os
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,11 +24,28 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from agents.graph import nexus_app
-from database import get_db, init_db
+from budget_service import calculate_cost_and_budget, validate_goal_inputs
+from database import database_ready, get_db, init_db
 from models import Document, Goal
-from rag_service import ingest_document, retrieve_context, search_similar
+from rag_service import (
+    RagUnavailableError,
+    ingest_document,
+    retrieve_context,
+    search_similar,
+)
 
-app = FastAPI(title="NEXUS Autonomous Agent", version="0.2.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Create extensions/tables after the process is up, not at import time.
+    try:
+        init_db()
+    except Exception as exc:
+        print(f"Database initialization deferred (database not ready: {exc})")
+    yield
+
+
+app = FastAPI(title="NEXUS Autonomous Agent", version="0.2.0", lifespan=lifespan)
 
 cors_origins = [
     origin.strip()
@@ -44,9 +62,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Enable pgvector, then create all tables.
-init_db()
 
 
 class GoalRequest(BaseModel):
@@ -65,13 +80,20 @@ goal_results_cache: dict[str, dict] = {}
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "nexus-backend"}
+    if not database_ready():
+        raise HTTPException(status_code=503, detail="database unavailable")
+    return {"status": "ok", "service": "nexus-backend", "database": "ok"}
 
 
 @app.post("/goal")
 def create_goal(request: GoalRequest, db: Session = Depends(get_db)):
+    try:
+        validate_goal_inputs(request.goal, request.budget, request.deadline_days)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     new_goal = Goal(
-        description=request.goal,
+        description=request.goal.strip(),
         budget=request.budget,
         deadline_days=request.deadline_days,
         status="created",
@@ -93,7 +115,11 @@ def execute_goal(goal_id: str, db: Session = Depends(get_db)):
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
 
-    rag_context, rag_sources = retrieve_context(goal.description)
+    try:
+        rag_context, rag_sources = retrieve_context(goal.description)
+    except RagUnavailableError as exc:
+        print(f"[RAG] Context retrieval unavailable: {exc}")
+        rag_context, rag_sources = "", []
 
     initial_state = {
         "goal": goal.description,
@@ -113,6 +139,10 @@ def execute_goal(goal_id: str, db: Session = Depends(get_db)):
         db.commit()
         raise
 
+    # Compute execution cost tracking and constraint evaluation
+    cost_summary = calculate_cost_and_budget(result, goal.budget, goal.deadline_days)
+    result["cost_summary"] = cost_summary
+
     goal.status = "executed"
     db.commit()
     goal_results_cache[goal_id] = result
@@ -129,10 +159,18 @@ def get_plan(goal_id: str):
         )
 
     return {
+        "goal_id": goal_id,
+        "goal": result.get("goal"),
         "task_plan": result.get("task_plan"),
         "risks": result.get("risks"),
         "final_decision": result.get("final_decision"),
+        "research_findings": result.get("research_findings"),
         "rag_sources": result.get("rag_sources", []),
+        "cost_summary": result.get("cost_summary", {}),
+        "execution_log": result.get("execution_log"),
+        "review_summary": result.get("review_summary"),
+        "status": result.get("status", "completed"),
+        "needs_replanning": result.get("needs_replanning", False),
     }
 
 
@@ -154,6 +192,9 @@ async def upload_document(
 
     try:
         return ingest_document(db, file_bytes, file.filename, file.content_type)
+    except RagUnavailableError as exc:
+        db.rollback()
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ValueError as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -179,7 +220,10 @@ def list_documents(db: Session = Depends(get_db)):
 
 @app.post("/rag/search")
 def rag_search(request: RagSearchRequest, db: Session = Depends(get_db)):
-    return {
-        "query": request.query,
-        "results": search_similar(db, request.query, request.top_k),
-    }
+    try:
+        return {
+            "query": request.query,
+            "results": search_similar(db, request.query, request.top_k),
+        }
+    except RagUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

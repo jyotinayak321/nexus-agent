@@ -3,11 +3,15 @@ import os
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from dotenv import load_dotenv
 
-# 55432, not 5432: a native Windows PostgreSQL service already owns 5432 on this machine.
+load_dotenv()
+
+# Align with the live backend and root docker-compose.yml.
+# Host port 55432 avoids a native Windows PostgreSQL service on 5432.
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql+psycopg2://nexus:nexus_pass@localhost:55432/nexus_db",
+    "postgresql://postgres:postgres@localhost:55432/nexus_db",
 )
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)

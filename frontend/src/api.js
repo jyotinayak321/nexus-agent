@@ -1,4 +1,4 @@
-// Central frontend API layer.
+// Central frontend API layer for NEXUS AI.
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8420").replace(/\/+$/, "");
 
 async function parseResponse(response) {
@@ -7,6 +7,11 @@ async function parseResponse(response) {
     throw new Error(payload.detail || payload.error || `Request failed (${response.status})`);
   }
   return payload;
+}
+
+export async function getHealth() {
+  const response = await fetch(`${BASE_URL}/health`);
+  return parseResponse(response);
 }
 
 export async function createGoal(goal, budget, deadlineDays) {
@@ -35,6 +40,11 @@ export async function uploadDocument(file) {
     method: "POST",
     body,
   });
+  return parseResponse(response);
+}
+
+export async function listDocuments() {
+  const response = await fetch(`${BASE_URL}/documents`);
   return parseResponse(response);
 }
 

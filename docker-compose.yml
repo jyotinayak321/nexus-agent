@@ -23,6 +23,8 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/nexus_db
       CORS_ORIGINS: http://localhost:5174,http://127.0.0.1:5174
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
     ports:
       - "8420:8420"
     volumes:

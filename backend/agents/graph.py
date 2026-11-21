@@ -29,6 +29,8 @@ class NexusState(TypedDict, total=False):
     execution_log: Optional[str]
     needs_replanning: Optional[bool]
     status: Optional[str]
+    cost_summary: Optional[dict[str, Any]]
+    review_summary: Optional[str]
 
 
 def build_nexus_graph():

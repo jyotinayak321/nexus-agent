@@ -18,3 +18,7 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Local certificates
+backend/avg-ca.crt
+frontend/avg-ca.crt
