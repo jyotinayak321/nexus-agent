@@ -150,7 +150,7 @@ EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 RAG_TOP_K=5
 RAG_CHUNK_SIZE=900
 RAG_CHUNK_OVERLAP=150
-MAX_DOCUMENT_MB=30
+MAX_DOCUMENT_MB=20
 ```
 
 The `DocumentChunk.embedding` column is currently fixed at **384 dimensions** to match `all-MiniLM-L6-v2`. If you change to an embedding model with a different dimension, update `EMBEDDING_DIMENSION` in `backend/models.py` and recreate/migrate that table.
